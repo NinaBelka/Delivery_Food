@@ -818,7 +818,7 @@ button {
   }
 
   .modal-dialog {
-    padding: 30px 35px;
+    padding: 20px 15px;
   }
 
   .modal-title {
@@ -827,5 +827,13 @@ button {
 
   .label-auth {
     margin: 10px;
+  }
+  .close-auth {
+    top: 0px;
+  }
+  
+  .modal-body {
+    margin: auto;
+    width: 95%;
   }
 }
