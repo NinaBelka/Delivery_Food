@@ -15,7 +15,13 @@ const cartButton = document.querySelector("#cart-button"),
   restaurants = document.querySelector('.restaurants'),
   menu = document.querySelector('.menu'),
   logo = document.querySelector('.logo'),
-  cardsMenu = document.querySelector('.cards-menu');
+  cardsMenu = document.querySelector('.cards-menu'),
+  restaurantTitle = document.querySelector('.restaurant-title'),
+  rating = document.querySelector('.rating'),
+  minPrice = document.querySelector('.price'),
+  category = document.querySelector('.category'),
+  inputSearch = document.querySelector('.input-search')
+
 
 const valid = function (str) {
   const nameReg = /^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$/;
@@ -102,11 +108,13 @@ function checkAuth() {
   }
 }
 
-function createCardRestaurant({ image, kitchen, name, price, stars,products, time_of_delivery: timeOfDelivery }) {
+function createCardRestaurant({ image, kitchen, name, price, stars, products, time_of_delivery: timeOfDelivery }) {
 
   const card = `
-    <a class="card card-restaurant" data-products="${products}">
-      <img src="${image}" alt="image" class="card-image"/>
+    <a class="card card-restaurant"
+    data-products="${products}"
+    data-info ="${[name, price, stars, kitchen]}">
+      <img src="${image}" alt="${name}" class="card-image"/>
       <div class="card-text">
         <div class="card-heading">
           <h3 class="card-title">${name}</h3>
@@ -133,7 +141,7 @@ function createCardGood({ description, image, name, price }) {
   card.className = 'card';
 
   card.insertAdjacentHTML('beforeend', `
-    <img src="${image}" alt="image" class="card-image"/>
+    <img src="${image}" alt="${name}" class="card-image"/>
     <div class="card-text">
       <div class="card-heading">
         <h3 class="card-title card-title-reg">${name}</h3>
@@ -156,17 +164,30 @@ function createCardGood({ description, image, name, price }) {
 
 }
 
+// Открывает меню ресторана
 function openGoods(event) {
   const target = event.target;
   if (login) {
 
     const restaurant = target.closest('.card-restaurant');
+
     if (restaurant) {
+
+      const info = restaurant.dataset.info.split(',');
+
+      const [name, price, stars, kitchen] = info;
+
       cardsMenu.textContent = '';
       containerPromo.classList.add('hide');
       restaurants.classList.add('hide');
       menu.classList.remove('hide');
-      getData(`./db/${restaurant.dataset.products}`).then(function(data) {
+
+      restaurantTitle.textContent = name;
+      rating.textContent = stars;
+      minPrice.textContent = `От ${price} ₽`;
+      category.textContent = kitchen;
+
+      getData(`./db/${restaurant.dataset.products}`).then(function (data) {
         data.forEach(createCardGood);
       });
     } else {
@@ -192,6 +213,62 @@ function init() {
     menu.classList.add('hide');
   });
 
+  inputSearch.addEventListener('keydown', function (event) {
+    if (event.keyCode === 13) {
+      const target = event.target;
+
+      const value = target.value.toLowerCase().trim();
+
+      target.value = '';
+
+      if (!value || value.length < 3) {
+        target.style.backgroundColor = 'red';
+        setTimeout(function () {
+          target.style.backgroundColor = '';
+        }, 2000);
+        return;
+      }
+
+      const goods = [];
+
+      getData('./db/partners.json')
+        .then(function (data) {
+          const products = data.map(function (item) {
+            return item.products;
+          });
+
+          products.forEach(function (product) {
+            getData(`./db/${product}`)
+              .then(function (data) {
+
+                goods.push(...data);
+
+                const searchGoods = goods.filter(function (item) {
+                  return item.name.toLowerCase().includes(value);
+                })
+
+                cardsMenu.textContent = '';
+
+                containerPromo.classList.add('hide');
+                restaurants.classList.add('hide');
+                menu.classList.remove('hide');
+
+                restaurantTitle.textContent = 'Результат поиска';
+                rating.textContent = '';
+                minPrice.textContent = '';
+                category.textContent = '';
+
+                return searchGoods;
+
+              })
+              .then(function (data) {
+                data.forEach(createCardGood);
+              });
+          });
+        });
+    }
+  });
+
   checkAuth();
 
   new Swiper('.container-promo', {
@@ -204,5 +281,3 @@ function init() {
   });
 }
 init();
-
-// ВОПРОС: если мы выходим со страницы с пиццами через кнопку выйти, мы выходим не только на страницу с ресторанами, но и из аккаунта?
