@@ -230,8 +230,6 @@ function addToCart(event) {
         count: 1
       });
     }
-    console.log(cart);
-
   }
 };
 
