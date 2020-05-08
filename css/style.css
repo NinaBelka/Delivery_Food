@@ -765,7 +765,7 @@ button {
   }
 
   .button-text {
-    font-size: 10px;
+    display: none;
   }
 
   .buttons {
